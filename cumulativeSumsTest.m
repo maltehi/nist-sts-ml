@@ -19,15 +19,8 @@ for i = 1:length(direction)
     results.(direction{i}).z = max(abs(S),[],1);
     results.(direction{i}).p_value = sums(results.(direction{i}).z, n);
 end
-    
-    function y = ndtr(x)
-        if (x > 0)
-            y = 0.5 * (1 + erf( x / sqrt(2)));
-        else
-            y = 0.5 * (1 - erf(-x / sqrt(2)));
-        end        
-    end
-    
+
+    % Calculate p_value
     function p_val = sums(z, nSeq)
         sum1 = 0;
         for k = fix((fix(-nSeq./z)+1)/4):fix((fix(nSeq./z)-1)/4)
@@ -40,7 +33,6 @@ end
              sum2 = sum2 - ndtr(((4*k+1)*z)/sqrt(nSeq));
         end
         p_val = 1.0 - sum1 + sum2;
-    end
-    
+    end    
 end
 
