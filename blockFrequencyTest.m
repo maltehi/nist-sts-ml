@@ -7,6 +7,12 @@ if nargin < 3
     n = size(bitStream,1);
 end
 
+% Truncate and make 0/1
+bitStream = bitStream(1:n,:);
+if ~isempty(find(bitStream < 0, 1))
+    bitStream = (bitStream > 0);
+end
+
 N = floor(n/M); % Number of blocks
 blocks = double(reshape(bitStream(1:M*N,:),M,N,[])); % Blocks in lines
 

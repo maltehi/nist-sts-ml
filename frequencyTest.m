@@ -6,7 +6,13 @@ if nargin < 2
     n = size(bitStream,1);
 end
 
-results.sum = sum(2*double(bitStream(1:n,:))-1,1);
+% Truncate and make +/-1
+bitStream = bitStream(1:n,:);
+if isempty(find(bitStream < 0, 1))
+    bitStream = 2*bitStream-1;
+end
+
+results.sum = sum(bitStream,1);
 results.s_obs = abs(results.sum)/sqrt(n);
 results.f = results.s_obs/sqrt(2);
 results.p_value = erfc(results.f);
