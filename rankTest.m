@@ -7,6 +7,12 @@ nStreams = size(bitStream,2);
 M = 32; Q = 32;
 N = floor(n / (M*Q));
 
+% Truncate and make 0/1 (bit representation might be irrelevant here?)
+bitStream = bitStream(1:M*Q*N,:);
+if ~isempty(find(bitStream < 0, 1))
+    bitStream = double(bitStream > 0);
+end
+
 % Not enough elements
 if ~N
     results.p_value = zeros(1,nStreams);
@@ -24,7 +30,7 @@ p_30 = 1 - (p_32 + p_31);
 
 % Rank evaluation
 R = zeros(N,nStreams);
-bitMat = reshape(bitStream(1:M*Q*N,:),M,Q,N,nStreams);    
+bitMat = reshape(bitStream,M,Q,N,nStreams);    
 for i = 1:nStreams
     for j = 1:N
         R(j,i) = rank(bitMat(:,:,j,i));
@@ -35,7 +41,8 @@ F_31 = sum(R == 31,1);
 F_30 = N - (F_32 + F_31);
 
 % Statistics
-results.chi_squared =((F_32 - N*p_32).^2 / p_32 ...
+results.bits_truncated = n - M*Q*N;
+results.chi_squared = ((F_32 - N*p_32).^2 / p_32 ...
                       + (F_31 - N*p_31).^2 / p_31 ...
                       + (F_30 - N*p_30).^2 / p_30) / N;		
 results.p_value = exp(-results.chi_squared/2);
