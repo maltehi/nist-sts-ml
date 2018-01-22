@@ -66,5 +66,10 @@ if opt.all || (isfield(opt,'longRuns') && opt.longRuns.active)
     stats.longestRunOfOnes = longestRunOfOnesTest(bitStream, opt.n);
 end
 
+% Rank Test
+if opt.all || (isfield(opt,'rank') && opt.rank.active)
+    stats.rank = rankTest(bitStream, opt.n);
+end
+
 end
 
