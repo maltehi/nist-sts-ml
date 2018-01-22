@@ -18,6 +18,8 @@ for i = 1:length(direction)
     S = cumsum(bitStream,1,direction{i});
     results.(direction{i}).z = max(abs(S),[],1);
     results.(direction{i}).p_value = sums(results.(direction{i}).z, n);
+    results.(direction{i}).pass_ratio = length(find(results.(direction{i}).p_value > 0.01)) ...
+                                        / length(results.(direction{i}).p_value);
 end
 
     % Calculate p_value

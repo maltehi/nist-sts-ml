@@ -83,5 +83,8 @@ end
 % Compute p-value
 results.p_value = gammainc(results.chi_squared/2, K/2, 'upper');
 
+% Calculate pass ratio
+results.pass_ratio = length(find(results.p_value > 0.01))/length(results.p_value);
+
 end
 
