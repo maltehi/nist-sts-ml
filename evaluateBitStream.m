@@ -71,5 +71,10 @@ if opt.all || (isfield(opt,'rank') && opt.rank.active)
     stats.rank = rankTest(bitStream, opt.n);
 end
 
+% DFT Test
+if opt.all || (isfield(opt,'dft') && opt.dft.active)
+    stats.dft = dftTest(bitStream, opt.n);
+end
+
 end
 
