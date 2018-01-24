@@ -1,9 +1,12 @@
-function [results] = nonOverlappingTest(bitStream, m, n, N)
+function [results] = nonOverlappingTest(bitStream, m, n, N, limitTemplates)
 if nargin < 3
     n = size(bitStream,1);
 end
 if nargin < 4
     N = 8;
+end
+if nargin < 5
+    limitTemplates = true;
 end
 nStreams = size(bitStream,2);
 
@@ -16,9 +19,13 @@ if ~isempty(find(bitStream < 0, 1))
 end
 
 % Number of aperiodic templates for m = 1..21
-% In the C-code, the number of templates is limited to 148 by a constant.
-numOfTemplates = [0, 2, 4, 6, 12, 20, 40, 74, 148*ones(1,13)].'; %, 284, 568, 1116, ...
-% 			      2232, 4424, 8848, 17622, 35244, 70340, 140680, 281076, 562152].';
+if limitTemplates
+    % In the C-code, the number of templates is limited to 148 by a constant.
+    numOfTemplates = [0, 2, 4, 6, 12, 20, 40, 74, 148*ones(1,13)].';
+else
+    numOfTemplates = [0, 2, 4, 6, 12, 20, 40, 74, 148, 284, 568, 1116, ...
+    			      2232, 4424, 8848, 17622, 35244, 70340, 140680, 281076, 562152].';
+end
               
 % Read patterns from template file into columns of sequences
 templateFile = fopen(sprintf('templates\\template%d',m),'r');
@@ -48,16 +55,22 @@ for kk = 1:nStreams
     for jj = 1:numOfTemplates(m)
         for  i = 1:N % Loop blocks
             W_obs = 0;
+%             skip = 0;
             for j = 0:M-m % Loop bits of substring % !! Start from 0 here!
                 match = 1;
-                for k = 1:m  % Loop bits of template
+%                 if skip
+%                     skip = skip-1;
+%                     continue;
+%                 end
+                for k = 1:m  % Loop bits of template. Does not jump blocks, but is fast and delivers equal results
                     if sequences(k,jj) ~= bitStream(j+k,i,kk)
                         match = 0;
                         break;
                     end
                 end
-                if ( match == 1 )
+                if match
                     W_obs = W_obs + 1;
+%                     skip = m-1;
                 end
             end
             Wj(i,jj,kk) = W_obs;
