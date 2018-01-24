@@ -80,6 +80,6 @@ for kk = 1:nStreams
     end
 end
 
-results.pass_ratio = numel(find(results.p_value > 0.01)) / numel(results.p_value);
+results.pass_ratio = numel(find(results.p_value >= 0.01)) / numel(results.p_value);
 
 end

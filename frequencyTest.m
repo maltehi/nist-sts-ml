@@ -16,7 +16,7 @@ results.sum = sum(bitStream,1);
 results.s_obs = abs(results.sum)/sqrt(n);
 results.f = results.s_obs/sqrt(2);
 results.p_value = erfc(results.f);
-results.pass_ratio = length(find(results.p_value > 0.01))/length(results.p_value);
+results.pass_ratio = length(find(results.p_value >= 0.01))/length(results.p_value);
 
 end
 

@@ -46,7 +46,7 @@ results.chi_squared = ((F_32 - N*p_32).^2 / p_32 ...
                       + (F_31 - N*p_31).^2 / p_31 ...
                       + (F_30 - N*p_30).^2 / p_30) / N;		
 results.p_value = exp(-results.chi_squared/2);
-results.pass_ratio = length(find(results.p_value > 0.01)) / length(results.p_value);
+results.pass_ratio = length(find(results.p_value >= 0.01)) / length(results.p_value);
 
 end
 

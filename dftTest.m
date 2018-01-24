@@ -29,7 +29,7 @@ results.d = (results.N_1 - results.N_0) / sqrt(n*0.95*0.05/4);
 
 % Statistics
 results.p_value = erfc(abs(results.d)/sqrt(2));
-results.pass_ratio = length(find(results.p_value > 0.01)) / length(results.p_value);
+results.pass_ratio = length(find(results.p_value >= 0.01)) / length(results.p_value);
 
 end
 

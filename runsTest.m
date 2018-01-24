@@ -24,7 +24,7 @@ results.p_value = erfc(abs(results.V - 2*n * pi_r .* (1-pi_r)) ...
                        ./ (2*sqrt(2*n) * pi_r .* (1-pi_r)));
 
 % Calculate pass ratio
-results.pass_ratio = length(find(results.p_value > 0.01))/length(results.p_value);
+results.pass_ratio = length(find(results.p_value >= 0.01))/length(results.p_value);
 
 end
 

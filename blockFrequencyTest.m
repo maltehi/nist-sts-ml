@@ -29,7 +29,7 @@ results.chi_squared = 4 * M * results.sum;
 results.p_value = gammainc(results.chi_squared/2,N/2,'upper');
 
 % Calculate pass ratio
-results.pass_ratio = length(find(results.p_value > 0.01))/length(results.p_value);
+results.pass_ratio = length(find(results.p_value >= 0.01))/length(results.p_value);
 
 end
 
