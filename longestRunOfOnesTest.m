@@ -6,9 +6,7 @@ end
 
 if n < 128
     results.p_value = zeros(1,n);
-    fprintf("\t\t\t  LONGEST RUNS OF ONES TEST\n");
-    fprintf("\t\t---------------------------------------------\n");
-    fprintf("\t\t   n=%d is too short\n", n);
+    results.pass_ratio = 0;
     return
 elseif n < 6272
 %     V[0] = 1; V[1] = 2; V[2] = 3; V[3] = 4;
