@@ -22,8 +22,14 @@ end
 if ~isfield(opt,'n')
     opt.n = size(bitStream,1);
 end
+if ~isfield(opt,'m')
+    opt.m = round(log2(opt.n)/2);
+end
 if ~isfield(opt,'M')
     opt.M = round(sqrt(opt.n));
+end  
+if ~isfield(opt,'N')
+    opt.N = 8;
 end    
 
 % Frequency Test
@@ -47,8 +53,6 @@ if opt.all || (isfield(opt,'blockFreq') && opt.blockFreq.active)
         error('Block frequency test not possible: M is not defined');
     end
     stats.blockFrequency = blockFrequencyTest(bitStream, opt.M, opt.n);
-    stats.blockFrequency.passRatio = length(find(stats.blockFrequency.p_value > 0.01)) ...
-                                     / length(stats.blockFrequency.p_value);
 end
 
 % Cumulative Sums Test
@@ -74,6 +78,11 @@ end
 % DFT Test
 if opt.all || (isfield(opt,'dft') && opt.dft.active)
     stats.dft = dftTest(bitStream, opt.n);
+end
+
+% Non Overlapping Templates Test
+if opt.all || (isfield(opt,'nonOverlap') && opt.nonOverlap.active)
+    stats.nonOverlap = nonOverlappingTest(bitStream, opt.m, opt.n, opt.N);
 end
 
 end
