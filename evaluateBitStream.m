@@ -35,17 +35,18 @@ if ~isfield(opt,'N')
     opt.N = 8;
 end
 
+
 p_c = 1-opt.alpha;
-stats.metric.alpha = opt.alpha;
-stats.metric.nStreams = size(bitStream,2);
-stats.metric.confidenceInterval = min([p_c - 3*sqrt(p_c*opt.alpha/stats.metric.nStreams), ...
-                                       p_c + 3*sqrt(p_c*opt.alpha/stats.metric.nStreams)], ...
-                                      1);
+stats.alpha = opt.alpha;
+stats.nStreams = size(bitStream,2);
+stats.confidenceInterval = min([p_c - 3*sqrt(p_c*stats.alpha/stats.nStreams), ...
+                                p_c + 3*sqrt(p_c*opt.alpha/stats.nStreams)], ...
+                               1);
                            
-fprintf('alpha: %d\n', stats.metric.alpha)
-fprintf('nStreams: %d\n', stats.metric.nStreams)
-fprintf('confidence interval: [%d, %d]\n', stats.metric.confidenceInterval(1),...
-        stats.metric.confidenceInterval(2))
+fprintf('alpha: %d\n', stats.alpha)
+fprintf('nStreams: %d\n', stats.nStreams)
+fprintf('confidence interval: [%d, %d]\n', stats.confidenceInterval(1),...
+        stats.confidenceInterval(2))
 
 % Frequency Test
 if opt.all || (isfield(opt,'freq') && opt.freq.active)
@@ -55,7 +56,7 @@ if opt.all || (isfield(opt,'freq') && opt.freq.active)
     disp('====================')
     fprintf('\n')
     stats.frequency = frequencyTest(bitStream, opt.n);
-    stats.frequency.final = assess(stats.frequency, stats.metric);
+    stats.frequency.final = assess(stats.frequency.p_value, stats.alpha, stats.confidenceInterval);
     
     % If frequency test fails, other tests are likely to fail, too
     failedIdx = find(stats.frequency.p_value < 0.01);
@@ -79,7 +80,7 @@ if opt.all || (isfield(opt,'blockFreq') && opt.blockFreq.active)
         error('Block frequency test not possible: M is not defined');
     end
     stats.blockFrequency = blockFrequencyTest(bitStream, opt.M, opt.n);    
-    stats.blockFrequency.final = assess(stats.blockFrequency, stats.metric);
+    stats.blockFrequency.final = assess(stats.blockFrequency.p_value, stats.alpha, stats.confidenceInterval);
 end
 
 % Cumulative Sums Test
@@ -92,11 +93,11 @@ if opt.all || (isfield(opt,'cumSums') && opt.cumSums.active)
     stats.cumulativeSums = cumulativeSumsTest(bitStream, opt.n);
     if isfield(stats.cumulativeSums,'forward')
         fprintf('Forward: ')
-        stats.cumulativeSums.forward.final = assess(stats.cumulativeSums.forward, stats.metric);
+        stats.cumulativeSums.forward.final = assess(stats.cumulativeSums.forward.p_value, stats.alpha, stats.confidenceInterval);
     end
     if isfield(stats.cumulativeSums,'reverse')
         fprintf('Reverse: ')
-        stats.cumulativeSums.reverse.final = assess(stats.cumulativeSums.reverse, stats.metric);
+        stats.cumulativeSums.reverse.final = assess(stats.cumulativeSums.reverse.p_value, stats.alpha, stats.confidenceInterval);
     end
 end
 
@@ -108,7 +109,7 @@ if opt.all || (isfield(opt,'runs') && opt.runs.active)
     disp('===============')
     fprintf('\n')
     stats.runs = runsTest(bitStream, opt.n);
-    stats.runs.final = assess(stats.runs, stats.metric);
+    stats.runs.final = assess(stats.runs.p_value, stats.alpha, stats.confidenceInterval);
 end
 
 % Longest Run of Ones Test
@@ -119,7 +120,7 @@ if opt.all || (isfield(opt,'longRuns') && opt.longRuns.active)
     disp('==============================')
     fprintf('\n')
     stats.longestRunOfOnes = longestRunOfOnesTest(bitStream, opt.n);
-    stats.longestRunOfOnes.final = assess(stats.longestRunOfOnes, stats.metric);
+    stats.longestRunOfOnes.final = assess(stats.longestRunOfOnes.p_value, stats.alpha, stats.confidenceInterval);
 end
 
 % Rank Test
@@ -130,7 +131,7 @@ if opt.all || (isfield(opt,'rank') && opt.rank.active)
     disp('===============')
     fprintf('\n')
     stats.rank = rankTest(bitStream, opt.n);
-    stats.rank.final = assess(stats.rank, stats.metric);
+    stats.rank.final = assess(stats.rank.p_value, stats.alpha, stats.confidenceInterval);
 end
 
 % DFT Test
@@ -141,7 +142,7 @@ if opt.all || (isfield(opt,'dft') && opt.dft.active)
     disp('=====================================')
     fprintf('\n')
     stats.dft = dftTest(bitStream, opt.n);
-    stats.dft.final = assess(stats.dft, stats.metric);
+    stats.dft.final = assess(stats.dft.p_value, stats.alpha, stats.confidenceInterval);
 end
 
 % Non Overlapping Templates Test
@@ -152,7 +153,7 @@ if opt.all || (isfield(opt,'nonOverlap') && opt.nonOverlap.active)
     disp('====================================')
     fprintf('\n')
     stats.nonOverlap = nonOverlappingTest(bitStream, opt.m, opt.n, opt.N);
-    stats.nonOverlap.final = assess(stats.nonOverlap, stats.metric);
+    stats.nonOverlap.final = assess(stats.nonOverlap.p_value, stats.alpha, stats.confidenceInterval);
 end
 
 % % Overlapping Templates Test
@@ -162,33 +163,38 @@ end
 %                                      stats.confidenceInterval);
 % end
 
-    function outStats = assess(testStats, metricStats)
-        testStats.pass_ratio = numel(find(testStats.p_value >= metricStats.alpha)) ...
-                               / numel(testStats.p_value); 
-        outStats.proportion = testStats.pass_ratio >= metricStats.confidenceInterval(1) ...
-                                     && testStats.pass_ratio <= metricStats.confidenceInterval(2);
+    function outStats = assess(p_value, alpha, confInt)
+        numSequences = numel(p_value);
+        outStats.pass_ratio = numel(find(p_value >= alpha)) ...
+                               / numel(p_value); 
+        outStats.proportionPass = outStats.pass_ratio >= confInt(1) ...
+                                     && outStats.pass_ratio <= confInt(2);
         
         fprintf('Proportion of passed sequences: ')
-        if outStats.proportion
+        if outStats.proportionPass
             fprintf('PASSED\n');
         else
             fprintf('NOT PASSED\n');
         end 
-        fprintf('pass_ratio: %d\n\n', testStats.pass_ratio)
+        fprintf('pass_ratio: %d\n\n', outStats.pass_ratio)
         
-%         outStats.F = discretize(testStats.p_value(:).', 0:0.1:1);
-%         outStats.chi_squared = sum((outStats.F - metricStats.nStreams/10).^2 ...
-%                                           / (metricStats.nStreams/10));
-%         outStats.p_value_T = gammainc(outStats.chi_squared/2, 9/2, 'upper');        
-%         outStats.fitting = outStats.p_value_T >= 0.0001;
-%         
-%         fprintf('Uniform distribution of P-values: ')
-%         if outStats.fitting
-%             fprintf('PASSED\n');
-%         else
-%             fprintf('NOT PASSED\n');
-%         end 
-%         fprintf('p_value_T: %d\n\n', outStats.p_value_T)
+        outStats.F = zeros(10,1);
+        p_bins = discretize(p_value(:).', 0:0.1:1);
+        for i = 1:length(p_bins)
+            outStats.F(p_bins(i)) = outStats.F(p_bins(i)) + 1;
+        end
+        outStats.chi_squared = sum((outStats.F - numSequences/10).^2 ...
+                                   / (numSequences/10));
+        outStats.p_value_T = gammainc(outStats.chi_squared/2, 9/2, 'upper');        
+        outStats.fittingPass = outStats.p_value_T >= 0.0001;
+        
+        fprintf('Uniform distribution of P-values: ')
+        if outStats.fittingPass
+            fprintf('PASSED\n');
+        else
+            fprintf('NOT PASSED\n');
+        end 
+        fprintf('p_value_T: %d\n\n', outStats.p_value_T)
     end
 
 end
